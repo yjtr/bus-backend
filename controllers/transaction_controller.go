@@ -3,7 +3,6 @@ package controllers
 import (
 	"awesomeProject/models"
 	"awesomeProject/utils"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -78,7 +77,8 @@ func (c *TransactionController) GetTransactions(ctx *gin.Context) {
 		Limit(pageSize).
 		Find(&transactions)
 
-	ctx.JSON(http.StatusOK, gin.H{
+	// 返回数据和分页信息
+	utils.Success(ctx, gin.H{
 		"data": transactions,
 		"pagination": gin.H{
 			"page":      page,
