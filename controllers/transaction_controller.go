@@ -1,0 +1,90 @@
+package controllers
+
+import (
+	"awesomeProject/models"
+	"awesomeProject/utils"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+type TransactionController struct {
+}
+
+func NewTransactionController() *TransactionController {
+	return &TransactionController{}
+}
+
+// GetTransactions 查询交易记录
+// @Summary 查询交易记录
+// @Description 根据条件查询交易记录
+// @Tags 交易记录
+// @Produce json
+// @Param date query string false "日期（格式：2006-01-02）"
+// @Param route_id query int false "线路ID"
+// @Param card_id query string false "卡片ID"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} map[string]interface{}
+// @Router /api/v1/transactions [get]
+func (c *TransactionController) GetTransactions(ctx *gin.Context) {
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("page_size", "20"))
+	dateStr := ctx.Query("date")
+	routeIDStr := ctx.Query("route_id")
+	cardID := ctx.Query("card_id")
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	query := utils.DB.Model(&models.Transaction{})
+
+	// 日期筛选
+	if dateStr != "" {
+		date, err := time.Parse("2006-01-02", dateStr)
+		if err == nil {
+			startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
+			endOfDay := startOfDay.Add(24 * time.Hour)
+			query = query.Where("board_time >= ? AND board_time < ?", startOfDay, endOfDay)
+		}
+	}
+
+	// 线路筛选
+	if routeIDStr != "" {
+		if routeID, err := strconv.ParseUint(routeIDStr, 10, 32); err == nil {
+			query = query.Where("route_id = ?", routeID)
+		}
+	}
+
+	// 卡片筛选
+	if cardID != "" {
+		query = query.Where("card_id = ?", cardID)
+	}
+
+	var total int64
+	query.Count(&total)
+
+	var transactions []models.Transaction
+	offset := (page - 1) * pageSize
+	query.Preload("Card").Preload("Route").
+		Order("board_time DESC").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&transactions)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": transactions,
+		"pagination": gin.H{
+			"page":      page,
+			"page_size": pageSize,
+			"total":     total,
+			"pages":     (total + int64(pageSize) - 1) / int64(pageSize),
+		},
+	})
+}
