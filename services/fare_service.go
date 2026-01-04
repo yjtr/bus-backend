@@ -20,10 +20,10 @@ func NewFareService(db *gorm.DB) *FareService {
 // CalculateFare 计算单次乘车费用
 func (s *FareService) CalculateFare(cardID string, routeID uint, startStationID, endStationID uint, boardTime time.Time) (*FareCalculationResult, error) {
 	result := &FareCalculationResult{
-		BaseFare:        0,
-		DiscountAmount:  0,
-		DiscountType:    "",
-		ActualFare:      0,
+		BaseFare:       0,
+		DiscountAmount: 0,
+		DiscountType:   "",
+		ActualFare:     0,
 	}
 
 	// 1. 计算基础票价
@@ -177,11 +177,12 @@ func (s *FareService) checkTransferDiscount(cardID string, routeID uint, station
 	return transfer.DiscountAmount, "transfer", nil
 }
 
-// checkMonthlyDiscount 检查月度累计折扣
-func (s *FareService) checkMonthlyDiscount(cardID string, baseFare float64) (float64, string, error) {
-	// 从Redis获取当月累计金额
-	currentAmount, err := utils.GetCardMonthlyAmount(cardID)
+// checkMonthlyDiscount 检查月度累计折扣（使用数据库）
+func (s *FareService) checkMonthlyDiscount(cardID string, currentAmountAfterDiscounts float64) (float64, string, error) {
+	// 从数据库获取当月累计金额（不包含本次交易）
+	currentAmount, err := utils.GetCurrentMonthAggregate(s.db, cardID)
 	if err != nil {
+		// 查询失败时返回0折扣，不影响主流程
 		return 0, "", nil
 	}
 
@@ -191,8 +192,15 @@ func (s *FareService) checkMonthlyDiscount(cardID string, baseFare float64) (flo
 		Order("threshold DESC"). // 从高到低排序
 		Find(&policies)
 
+	// 注意：设计文档要求按"扣除特殊票种和换乘优惠后的金额"累计
+	// 这里传入的currentAmountAfterDiscounts是本次交易扣除优惠后的金额，用于判断本次是否触发阈值
+	// currentAmount是之前已累计的金额
+
+	// 计算累计金额（之前累计 + 本次应付金额）
+	totalAmount := currentAmount + currentAmountAfterDiscounts
+
 	for _, policy := range policies {
-		if currentAmount >= policy.Threshold {
+		if totalAmount >= policy.Threshold {
 			return policy.DiscountRate, "monthly_discount", nil
 		}
 	}
@@ -222,8 +230,9 @@ func (s *FareService) checkCardTypeDiscount(cardID string, baseFare float64) (fl
 
 // FareCalculationResult 计费结果
 type FareCalculationResult struct {
-	BaseFare       float64 `json:"base_fare"`        // 基础票价
-	DiscountAmount float64 `json:"discount_amount"`  // 优惠金额
-	DiscountType   string  `json:"discount_type"`    // 优惠类型
-	ActualFare     float64 `json:"actual_fare"`      // 实收金额
+	BaseFare       float64 `json:"base_fare"`       // 基础票价
+	DiscountAmount float64 `json:"discount_amount"` // 优惠金额
+	DiscountType   string  `json:"discount_type"`   // 优惠类型
+	ActualFare     float64 `json:"actual_fare"`     // 实收金额
+	PenaltyFare    bool    `json:"penalty_fare"`    // 是否为罚款计费
 }
