@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"awesomeProject/services"
-	"net/http"
+	"awesomeProject/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,19 +28,15 @@ func NewCardController(cardService *services.CardService) *CardController {
 func (c *CardController) GetCard(ctx *gin.Context) {
 	cardID := ctx.Param("id")
 	if cardID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "缺少卡片ID",
-		})
+		utils.BadRequest(ctx, "缺少卡片ID")
 		return
 	}
 
 	card, err := c.cardService.GetCardByID(cardID)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"error": "卡片不存在",
-		})
+		utils.NotFound(ctx, "卡片不存在")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, card)
+	utils.Success(ctx, card)
 }

@@ -2,7 +2,9 @@ package main
 
 import (
 	"awesomeProject/config"
+	"awesomeProject/middleware"
 	"awesomeProject/routes"
+	"awesomeProject/services"
 	"awesomeProject/utils"
 	"fmt"
 	"log"
@@ -40,8 +42,29 @@ func main() {
 		log.Println("Redis连接成功")
 	}
 
+	// 初始化服务
+	fareService := services.NewFareService(db)
+	penaltyService := services.NewPenaltyService(db, fareService)
+	cacheService := services.NewCacheService(db)
+	cleanupService := services.NewCleanupService(db)
+
+	// 启动配置缓存刷新定时任务（每5分钟刷新一次）
+	cacheService.StartCacheRefreshTask(5)
+	log.Println("配置缓存服务已启动（每5分钟刷新）")
+
+	// 启动罚款计费定时任务（每5分钟检查一次，2小时超时）
+	penaltyService.StartPenaltyProcessor(5, 120)
+	log.Println("罚款计费定时任务已启动（每5分钟检查，2小时超时）")
+
+	// 启动数据清理定时任务（每24小时执行一次，保留7天）
+	cleanupService.StartCleanupTask(24, 7)
+	log.Println("数据清理定时任务已启动（每24小时执行，保留7天）")
+
 	// 创建Gin引擎
 	r := gin.Default()
+
+	// 配置CORS（必须在路由之前）
+	r.Use(middleware.CORS())
 
 	// 设置路由
 	routes.SetupRoutes(r)

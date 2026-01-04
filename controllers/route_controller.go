@@ -3,7 +3,6 @@ package controllers
 import (
 	"awesomeProject/models"
 	"awesomeProject/utils"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,13 +24,9 @@ func NewRouteController() *RouteController {
 func (c *RouteController) GetRoutes(ctx *gin.Context) {
 	var routes []models.Route
 	if err := utils.DB.Where("status = 'active'").Find(&routes).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "查询失败",
-		})
+		utils.InternalServerError(ctx, "查询失败")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": routes,
-	})
+	utils.Success(ctx, routes)
 }

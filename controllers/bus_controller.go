@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"awesomeProject/services"
-	"net/http"
+	"awesomeProject/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,25 +29,18 @@ func NewBusController(uploadService *services.UploadService) *BusController {
 func (c *BusController) UploadBatchRecords(ctx *gin.Context) {
 	var records []services.BatchRecordRequest
 	if err := ctx.ShouldBindJSON(&records); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "请求参数错误",
-			"details": err.Error(),
-		})
+		utils.BadRequest(ctx, "请求参数错误: "+err.Error())
 		return
 	}
 
 	successCount, err := c.uploadService.UploadBatchRecords(records)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "处理记录失败",
-			"details": err.Error(),
-		})
+		utils.InternalServerError(ctx, "处理记录失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "ok",
+	utils.Success(ctx, gin.H{
 		"received": successCount,
-		"total": len(records),
+		"total":    len(records),
 	})
 }

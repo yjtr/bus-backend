@@ -3,7 +3,6 @@ package controllers
 import (
 	"awesomeProject/models"
 	"awesomeProject/utils"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -27,25 +26,19 @@ func NewConfigController() *ConfigController {
 func (c *ConfigController) GetRouteConfig(ctx *gin.Context) {
 	routeIDStr := ctx.Query("route_id")
 	if routeIDStr == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "缺少route_id参数",
-		})
+		utils.BadRequest(ctx, "缺少route_id参数")
 		return
 	}
 
 	routeID, err := strconv.ParseUint(routeIDStr, 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "route_id参数格式错误",
-		})
+		utils.BadRequest(ctx, "route_id参数格式错误")
 		return
 	}
 
 	var route models.Route
 	if err := utils.DB.Where("id = ?", routeID).First(&route).Error; err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"error": "线路不存在",
-		})
+		utils.NotFound(ctx, "线路不存在")
 		return
 	}
 
@@ -67,19 +60,19 @@ func (c *ConfigController) GetRouteConfig(ctx *gin.Context) {
 	stations := make([]map[string]interface{}, 0)
 	for _, rs := range routeStations {
 		stations = append(stations, map[string]interface{}{
-			"id":       rs.Station.ID,
-			"station_id": rs.Station.StationID,
-			"name":     rs.Station.Name,
-			"sequence": rs.Sequence,
+			"id":          rs.Station.ID,
+			"station_id":  rs.Station.StationID,
+			"name":        rs.Station.Name,
+			"sequence":    rs.Sequence,
 			"is_transfer": rs.Station.IsTransfer,
 		})
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"route_id": route.ID,
+	utils.Success(ctx, gin.H{
+		"route_id":   route.ID,
 		"route_name": route.Name,
-		"stations": stations,
-		"fares": fares,
-		"transfers": transfers,
+		"stations":   stations,
+		"fares":      fares,
+		"transfers":  transfers,
 	})
 }

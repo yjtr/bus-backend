@@ -36,12 +36,14 @@ func InitDatabase(cfg *config.Config) (*gorm.DB, error) {
 		{"devices", &models.Device{}},
 		{"users", &models.User{}},
 		{"discount_policies", &models.DiscountPolicy{}},
-		// 第二阶段：关联表（依赖基础表）
+		// 第二阶段：关联表（依赖基础表         ）
 		{"route_stations", &models.RouteStation{}},
 		{"fares", &models.Fare{}},
 		{"transfers", &models.Transfer{}},
-		// 第三阶段：交易表（依赖基础表）
+		// 第三阶段：交易表和扩展表（依赖基础表）
 		{"transactions", &models.Transaction{}},
+		{"monthly_aggregates", &models.MonthlyAggregate{}},
+		{"tap_events", &models.TapEvent{}},
 	}
 
 	// 逐个迁移表
