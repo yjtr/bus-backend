@@ -4,7 +4,7 @@ package main
 // 使用方法: go run scripts/test_connection.go
 
 import (
-	"awesomeProject/config"
+	"TapTransit-backend/config"
 	"fmt"
 	"log"
 

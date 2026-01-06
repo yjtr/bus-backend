@@ -2,7 +2,7 @@ package utils
 
 import (
 	"context"
-	"awesomeProject/config"
+	"TapTransit-backend/config"
 	"fmt"
 	"time"
 

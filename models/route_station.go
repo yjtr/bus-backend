@@ -20,8 +20,8 @@ type RouteStation struct {
 	ZoneID     *string  `gorm:"size:50;index" json:"zone_id,omitempty"`          // 分区ID（用于分区/分段计价）
 	DistanceKm *float64 `gorm:"type:decimal(10,3)" json:"distance_km,omitempty"` // 到线路起点的累计距离（公里）
 
-	Route   Route   `gorm:"foreignKey:RouteID" json:"route,omitempty"`
-	Station Station `gorm:"foreignKey:StationID" json:"station,omitempty"`
+	Route   Route   `gorm:"foreignKey:RouteID;references:ID" json:"route,omitempty"`
+	Station Station `gorm:"foreignKey:StationID;references:ID" json:"station,omitempty"`
 }
 
 // TableName 指定表名

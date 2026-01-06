@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # 构建应用
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bus-backend .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o TapTransit-backend .
 
 # 使用轻量级Alpine镜像作为运行环境
 FROM alpine:latest
@@ -41,4 +41,4 @@ COPY --from=builder /app/config ./config
 EXPOSE 8080
 
 # 运行应用
-CMD ["./bus-backend"]
+CMD ["./TapTransit-backend"]

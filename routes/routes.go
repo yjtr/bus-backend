@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"awesomeProject/controllers"
-	"awesomeProject/services"
-	"awesomeProject/utils"
+	"TapTransit-backend/controllers"
+	"TapTransit-backend/services"
+	"TapTransit-backend/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,21 +21,34 @@ func SetupRoutes(r *gin.Engine) {
 	configController := controllers.NewConfigController()
 	transactionController := controllers.NewTransactionController()
 	routeController := controllers.NewRouteController()
+	authController := controllers.NewAuthController()
 
 	// API v1路由组
 	v1 := r.Group("/api/v1")
 	{
+		// 认证相关
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/login", authController.Login)
+			auth.POST("/logout", authController.Logout)
+		}
+
 		// 公交数据相关
 		bus := v1.Group("/bus")
 		{
 			bus.POST("/batchRecords", busController.UploadBatchRecords) // 批量上传记录
-			bus.GET("/config", configController.GetRouteConfig)          // 获取线路配置
+			bus.GET("/config", configController.GetRouteConfig)         // 获取线路配置
 		}
 
 		// 卡片相关
 		card := v1.Group("/card")
 		{
 			card.GET("/:id", cardController.GetCard) // 查询卡片信息
+		}
+
+		cards := v1.Group("/cards")
+		{
+			cards.GET("", cardController.ListCards) // 查询卡片列表
 		}
 
 		// 交易记录相关

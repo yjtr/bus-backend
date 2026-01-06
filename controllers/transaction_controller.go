@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"awesomeProject/models"
-	"awesomeProject/utils"
+	"TapTransit-backend/models"
+	"TapTransit-backend/utils"
 	"strconv"
 	"time"
 

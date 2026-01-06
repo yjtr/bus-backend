@@ -1,14 +1,21 @@
 package controllers
 
 import (
-	"awesomeProject/services"
-	"awesomeProject/utils"
+	"TapTransit-backend/models"
+	"TapTransit-backend/services"
+	"TapTransit-backend/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
 type CardController struct {
 	cardService *services.CardService
+}
+
+type CardProfileResponse struct {
+	models.Card
+	DiscountRate   *float64 `json:"discount_rate,omitempty"`
+	DiscountAmount *float64 `json:"discount_amount,omitempty"`
 }
 
 func NewCardController(cardService *services.CardService) *CardController {
@@ -38,5 +45,51 @@ func (c *CardController) GetCard(ctx *gin.Context) {
 		return
 	}
 
-	utils.Success(ctx, card)
+	profile := CardProfileResponse{Card: *card}
+	if discount, err := c.cardService.GetCardDiscount(card.CardType); err == nil {
+		profile.DiscountRate = &discount.DiscountRate
+		profile.DiscountAmount = &discount.DiscountAmount
+	}
+	utils.Success(ctx, profile)
+}
+
+// ListCards 查询卡片列表
+// @Summary 查询卡片列表
+// @Description 支持按卡号、姓名、状态筛选
+// @Tags 卡片管理
+// @Produce json
+// @Param card_id query string false "卡片ID（精确）"
+// @Param cardNo query string false "卡号（模糊）"
+// @Param userName query string false "持有人姓名（模糊）"
+// @Param status query string false "状态 active/blocked/lost"
+// @Success 200 {array} models.Card
+// @Router /api/v1/cards [get]
+func (c *CardController) ListCards(ctx *gin.Context) {
+	cardID := ctx.Query("card_id")
+	cardNo := ctx.Query("cardNo")
+	holderName := ctx.Query("userName")
+	status := ctx.Query("status")
+
+	filter := services.CardFilter{
+		CardID:     cardID,
+		CardNoLike: cardNo,
+		HolderName: holderName,
+		Status:     status,
+	}
+
+	cards, err := c.cardService.ListCards(filter)
+	if err != nil {
+		utils.InternalServerError(ctx, "查询卡片失败")
+		return
+	}
+	profiles := make([]CardProfileResponse, 0, len(cards))
+	for _, card := range cards {
+		profile := CardProfileResponse{Card: card}
+		if discount, err := c.cardService.GetCardDiscount(card.CardType); err == nil {
+			profile.DiscountRate = &discount.DiscountRate
+			profile.DiscountAmount = &discount.DiscountAmount
+		}
+		profiles = append(profiles, profile)
+	}
+	utils.Success(ctx, profiles)
 }

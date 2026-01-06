@@ -1,8 +1,8 @@
 package services
 
 import (
-	"awesomeProject/models"
-	"awesomeProject/utils"
+	"TapTransit-backend/models"
+	"TapTransit-backend/utils"
 	"fmt"
 	"time"
 
@@ -224,7 +224,6 @@ func (s *FareService) checkCardTypeDiscount(cardID string, baseFare float64) (fl
 	if err != nil {
 		return 0, "", nil
 	}
-
 	return policy.DiscountRate, card.CardType + "_discount", nil
 }
 

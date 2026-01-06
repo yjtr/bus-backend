@@ -1,4 +1,4 @@
-module awesomeProject
+module TapTransit-backend
 
 go 1.23.0
 

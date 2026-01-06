@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"awesomeProject/models"
-	"awesomeProject/utils"
+	"TapTransit-backend/models"
+	"TapTransit-backend/utils"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -53,24 +53,44 @@ func (c *ConfigController) GetRouteConfig(ctx *gin.Context) {
 	// 获取站点列表（通过RouteStation关联）
 	var routeStations []models.RouteStation
 	utils.DB.Where("route_id = ?", routeID).
-		Preload("Station").
 		Order("sequence ASC").
 		Find(&routeStations)
 
-	stations := make([]map[string]interface{}, 0)
+	stationIDs := make([]uint, 0, len(routeStations))
 	for _, rs := range routeStations {
+		stationIDs = append(stationIDs, rs.StationID)
+	}
+
+	stationsByID := make(map[uint]models.Station, len(stationIDs))
+	if len(stationIDs) > 0 {
+		var stations []models.Station
+		utils.DB.Where("id IN ?", stationIDs).Find(&stations)
+		for _, station := range stations {
+			stationsByID[station.ID] = station
+		}
+	}
+
+	stations := make([]map[string]interface{}, 0, len(routeStations))
+	for _, rs := range routeStations {
+		station, ok := stationsByID[rs.StationID]
+		if !ok {
+			continue
+		}
 		stations = append(stations, map[string]interface{}{
-			"id":          rs.Station.ID,
-			"station_id":  rs.Station.StationID,
-			"name":        rs.Station.Name,
+			"id":          station.ID,
+			"station_id":  station.StationID,
+			"name":        station.Name,
 			"sequence":    rs.Sequence,
-			"is_transfer": rs.Station.IsTransfer,
+			"is_transfer": station.IsTransfer,
 		})
 	}
 
 	utils.Success(ctx, gin.H{
 		"route_id":   route.ID,
 		"route_name": route.Name,
+		"fare_type":  route.FareType,
+		"tap_mode":   route.TapMode,
+		"max_fare":   route.MaxFare,
 		"stations":   stations,
 		"fares":      fares,
 		"transfers":  transfers,
