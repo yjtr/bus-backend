@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"awesomeProject/config"
-	"awesomeProject/models"
+	"TapTransit-backend/config"
+	"TapTransit-backend/models"
 	"fmt"
 	"log"
 

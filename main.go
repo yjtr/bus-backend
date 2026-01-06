@@ -1,11 +1,11 @@
 package main
 
 import (
-	"awesomeProject/config"
-	"awesomeProject/middleware"
-	"awesomeProject/routes"
-	"awesomeProject/services"
-	"awesomeProject/utils"
+	"TapTransit-backend/config"
+	"TapTransit-backend/middleware"
+	"TapTransit-backend/routes"
+	"TapTransit-backend/services"
+	"TapTransit-backend/utils"
 	"fmt"
 	"log"
 

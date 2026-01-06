@@ -4,9 +4,9 @@ package main
 // 使用方法：go run scripts/seed_data.go
 
 import (
-	"awesomeProject/config"
-	"awesomeProject/models"
-	"awesomeProject/utils"
+	"TapTransit-backend/config"
+	"TapTransit-backend/models"
+	"TapTransit-backend/utils"
 	"fmt"
 	"log"
 )
@@ -28,9 +28,30 @@ func main() {
 
 	// 1. 创建示例线路
 	routes := []models.Route{
-		{RouteID: "A", Name: "1路", Area: "市区", Status: "active", Direction: "up"},
-		{RouteID: "B", Name: "2路", Area: "市区", Status: "active", Direction: "up"},
-		{RouteID: "K1", Name: "快速1路", Area: "市区", Status: "active", Direction: "up"},
+		{
+			RouteID:       "A",
+			Name:          "1路",
+			Status:        "active",
+			FareType:      "uniform",
+			TapMode:       "single_tap",
+			DirectionMode: "both",
+		},
+		{
+			RouteID:       "B",
+			Name:          "2路",
+			Status:        "active",
+			FareType:      "segment",
+			TapMode:       "single_tap",
+			DirectionMode: "both",
+		},
+		{
+			RouteID:       "K1",
+			Name:          "快速1路",
+			Status:        "active",
+			FareType:      "uniform",
+			TapMode:       "single_tap",
+			DirectionMode: "both",
+		},
 	}
 
 	for _, route := range routes {
@@ -141,5 +162,25 @@ func main() {
 		})
 	}
 
+	// 7. 创建管理员账户
+	admin := models.User{
+		Username: "admin",
+		Password: "admin123",
+		RealName: "系统管理员",
+		Role:     "admin",
+		Status:   "active",
+	}
+	db.FirstOrCreate(&admin, models.User{Username: admin.Username})
+
+	// 8. 创建示例卡片（当前模型仅保存UID）
+	cards := []models.Card{
+		{CardID: "A4ABFC7C", HolderName: "", CardType: "normal", Status: "active", Balance: 0.0},
+	}
+	for _, card := range cards {
+		db.FirstOrCreate(&card, models.Card{CardID: card.CardID})
+	}
+
 	fmt.Println("数据库初始化数据已成功创建！")
+	fmt.Println("管理员账号：admin / admin123")
+	fmt.Println("示例卡片：A4ABFC7C")
 }

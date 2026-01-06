@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"awesomeProject/services"
-	"awesomeProject/utils"
+	"TapTransit-backend/services"
+	"TapTransit-backend/utils"
 
 	"github.com/gin-gonic/gin"
 )
